@@ -117,6 +117,12 @@ int main() {
         double secondNumber = std::stod(secondNumberString);
 
 
+        // check if modulo operator is used with a double
+        if (operation == Operations::MODULO && (firstNumber != static_cast<int>(firstNumber) ||
+                                                secondNumber != static_cast<int>(secondNumber))) {
+            std::cout << "Modulo operator can only be used with integers" << std::endl;
+            continue;
+        }
 
 
         // calculate the result
