@@ -50,7 +50,6 @@ double calculate(double firstNumber, Operations operation, double secondNumber) 
         case Operations::Device:
             return firstNumber / secondNumber;
         case Operations::MODULO:
-            // TODO fix this
             return static_cast<int>(firstNumber) % static_cast<int>(secondNumber);
         case Operations::POWER:
             return pow(firstNumber, secondNumber);
@@ -75,14 +74,29 @@ int main() {
             continue;
         }
 
-        // check if user input has any unsupported operations
-
 
         // check if user input has unclosed parentheses
+        int amountTrailingParentheses = 0;
+        for (char c: str) {
+            if (c == '(') {
+                amountTrailingParentheses++;
+            } else if (c == ')') {
+                amountTrailingParentheses--;
+            }
+            if (amountTrailingParentheses < 0) {
+                break;
+            }
+        }
+
+        if (amountTrailingParentheses != 0) {
+            std::cout << "Invalid parentheses" << std::endl;
+            continue;
+        }
+
 
         // check if user input has an operator at the end
 
-        // check if user input has a . at the end
+        // check if user input number has a . at the end
 
         // check if modulo operator is used with a double
 
@@ -105,6 +119,12 @@ int main() {
         }
         double firstNumber = std::stod(firstNumberString);
         double secondNumber = std::stod(secondNumberString);
+
+        // check if user input has any unsupported operations
+        if (!isSupportedOperation(static_cast<char>(operation))) {
+            std::cout << "Unsupported operation" << std::endl;
+            continue;
+        }
 
 
         // calculate the result
