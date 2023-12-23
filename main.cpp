@@ -33,52 +33,27 @@ std::string getAndFilterUserInput() {
     return removeWhiteSpaces(&input);;
 }
 
+
 /**
  * Calculate one operation.
  * @param prompt The prompt in with a number, operator and a number
  * @return The result of the operation
  */
-double calculate(std::string *prompt) {
-    std::string firstNumber;
-    std::string secondNumber;
-    Operations operation;
-    bool operatorFound = false;
-
-    for (char c: *prompt) {
-        std::cout << "Current char: " << c << std::endl;
-
-        std::cout << isSupportedOperation(c) << std::endl;
-        std::cout << (static_cast<int>(operation) == 1) << std::endl;
-        if (isSupportedOperation(c)) {
-            operation = Operations(c);
-            operatorFound = true;
-        } else if (operatorFound) {
-            secondNumber += c;
-        } else {
-            firstNumber += c;
-        }
-    }
-
-    std::cout << "First number: " << firstNumber << std::endl;
-    std::cout << "Operation: " << static_cast<char>(operation) << std::endl;
-    std::cout << "Second number: " << secondNumber << std::endl;
-
-    double firstNumberDouble = std::stod(firstNumber);
-    double secondNumberDouble = std::stod(secondNumber);
-
+double calculate(double firstNumber, Operations operation, double secondNumber) {
     switch (operation) {
         case Operations::Add:
-            return firstNumberDouble + secondNumberDouble;
+            return firstNumber + secondNumber;
         case Operations::Subtract:
-            return firstNumberDouble - secondNumberDouble;
+            return firstNumber - secondNumber;
         case Operations::Multiply:
-            return firstNumberDouble * secondNumberDouble;
+            return firstNumber * secondNumber;
         case Operations::Device:
-            return firstNumberDouble / secondNumberDouble;
+            return firstNumber / secondNumber;
         case Operations::MODULO:
-            return static_cast<int>(firstNumberDouble) % static_cast<int>(secondNumberDouble);
+            // TODO fix this
+            return static_cast<int>(firstNumber) % static_cast<int>(secondNumber);
         case Operations::POWER:
-            return pow(firstNumberDouble, secondNumberDouble);
+            return pow(firstNumber, secondNumber);
         default:
             throw std::invalid_argument("Invalid operation");
     }
@@ -114,13 +89,29 @@ int main() {
         // determine the order of operations
 
         // get the extract the values out of string
+        std::string firstNumberString;
+        std::string secondNumberString;
+        Operations operation;
+        bool operatorFound = false;
+        for (char c: userInput) {
+            if (isSupportedOperation(c)) {
+                operation = Operations(c);
+                operatorFound = true;
+            } else if (operatorFound) {
+                secondNumberString += c;
+            } else {
+                firstNumberString += c;
+            }
+        }
+        double firstNumber = std::stod(firstNumberString);
+        double secondNumber = std::stod(secondNumberString);
 
 
         // calculate the result
-        double result = calculate(&userInput);
+        double result = calculate(firstNumber, operation, secondNumber);
 
         // print result
-        std::cout << "Result: " << result << std::endl;
+        std::cout << result << std::endl;
     }
     return 0;
 }
