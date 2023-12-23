@@ -120,6 +120,42 @@ getOperationAroundOperator(const std::string *completeOperation, Operations oper
     return std::make_tuple(firstNumber, operatorChar, secondNumber);
 }
 
+void setResultOfOperationInString(std::string *completeOperation, Operations operatorChar, double result) {
+    int indexOperator = completeOperation->find(static_cast<char>(operatorChar));
+    int indexStartOperation;
+    int indexEndOperation;
+    // firstIndex
+    int currentIndex = indexOperator;
+    do {
+        currentIndex--;
+        if (currentIndex < 0) {
+            break;
+        }
+        char currentChar = completeOperation->at(currentIndex);
+        if (isSupportedOperation(currentChar)) {
+            break;
+        }
+        indexStartOperation = currentIndex;
+    } while (true);
+
+    // secondIndex
+    currentIndex = indexOperator;
+    do {
+        currentIndex++;
+        if (currentIndex >= completeOperation->length()) {
+            break;
+        }
+        char currentChar = completeOperation->at(currentIndex);
+        if (isSupportedOperation(currentChar)) {
+            break;
+        }
+        indexEndOperation = currentIndex;
+    } while (true);
+
+
+    completeOperation->replace(indexStartOperation, indexEndOperation, std::to_string(result));
+}
+
 int main() {
     std::cout << "Hello, Welcome to my calculator" << std::endl;
 
@@ -194,10 +230,12 @@ int main() {
             // calculate the result
             double result = calculate(firstNumber, operation, secondNumber);
 
-            // print result
-            std::cout << result << std::endl;
+            // replace the operation with the result
+            setResultOfOperationInString(&userInput, operation, result);
         }
 
+        // print result
+        std::cout << "Result: " << userInput << std::endl;
 
     }
     return 0;
