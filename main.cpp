@@ -17,7 +17,7 @@ bool isSupportedOperation(char c) {
            static_cast<Operations>(c) == Operations::MODULO || static_cast<Operations>(c) == Operations::POWER;
 }
 
-std::string removeWhiteSpaces(std::string *string) {
+std::string removeWhiteSpaces(const std::string *string) {
     std::string result;
     for (char c: *string) {
         if (c != ' ') {
@@ -30,7 +30,16 @@ std::string removeWhiteSpaces(std::string *string) {
 std::string getAndFilterUserInput() {
     std::string input;
     std::getline(std::cin, input);
-    return removeWhiteSpaces(&input);;
+    return removeWhiteSpaces(&input);
+}
+
+bool unSupportedCharactersInString(const std::string *string) {
+    for (char c: *string) {
+        if (!isSupportedOperation(c) && !isdigit(c) && c != '.') {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -74,27 +83,14 @@ int main() {
             continue;
         }
 
-
-        // check if user input has unclosed parentheses
-        int amountTrailingParentheses = 0;
-        for (char c: str) {
-            if (c == '(') {
-                amountTrailingParentheses++;
-            } else if (c == ')') {
-                amountTrailingParentheses--;
-            }
-            if (amountTrailingParentheses < 0) {
-                break;
-            }
-        }
-
-        if (amountTrailingParentheses != 0) {
-            std::cout << "Invalid parentheses" << std::endl;
+        // check if user input has any unsupported characters (only numbers, points and operators are allowed)
+        if (unSupportedCharactersInString(&userInput)) {
+            std::cout << "Unsupported characters" << std::endl;
             continue;
         }
 
-
         // check if user input has an operator at the end
+
 
         // check if user input number has a . at the end
 
@@ -120,11 +116,7 @@ int main() {
         double firstNumber = std::stod(firstNumberString);
         double secondNumber = std::stod(secondNumberString);
 
-        // check if user input has any unsupported operations
-        if (!isSupportedOperation(static_cast<char>(operation))) {
-            std::cout << "Unsupported operation" << std::endl;
-            continue;
-        }
+
 
 
         // calculate the result
