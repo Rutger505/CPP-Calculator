@@ -13,9 +13,12 @@ enum class Operations {
 };
 
 bool isSupportedOperation(char c) {
-    return static_cast<Operations>(c) == Operations::Add || static_cast<Operations>(c) == Operations::Subtract ||
-           static_cast<Operations>(c) == Operations::Multiply || static_cast<Operations>(c) == Operations::Devide ||
-           static_cast<Operations>(c) == Operations::MODULO || static_cast<Operations>(c) == Operations::POWER;
+    return c == static_cast<char>(Operations::Add) ||
+           c == static_cast<char>(Operations::Subtract) ||
+           c == static_cast<char>(Operations::Multiply) ||
+           c == static_cast<char>(Operations::Devide) ||
+           c == static_cast<char>(Operations::MODULO) ||
+           c == static_cast<char>(Operations::POWER);
 }
 
 std::string removeWhiteSpaces(const std::string *string) {
@@ -217,7 +220,6 @@ int main() {
             double firstNumber = std::get<0>(tuple);
             Operations operation = std::get<1>(tuple);
             double secondNumber = std::get<2>(tuple);
-
 
             // check if modulo operator is used with a double
             if (operation == Operations::MODULO && (firstNumber != static_cast<int>(firstNumber) ||
