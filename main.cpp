@@ -1,6 +1,8 @@
+#include <cmath>
 #include <iostream>
 #include <algorithm>
 #include <map>
+#include <valarray>
 
 enum class Operator {
     ADD,
@@ -19,19 +21,20 @@ void preProcessInput(std::string &input);
 
 void removeAllSpaces(std::string &input);
 
+float calculate(std::string &expression);
 
-float calculate(std::string &input);
-
-void solveOperation(float &left, float &right, char &operation);
+float solveOperation(float &number1, float &number2, Operator &op);
 
 bool isOperator(char c);
+
+Operator getOperator(char c);
 
 int main() {
     std::cout << "Welcome to my calculator" << std::endl;
     std::cout << "Enter your calculation (h for help, q to quit)" << std::endl;
     std::string input;
     while (true) {
-        std::cout << ": " << std::flush;
+        std::cout << "> " << std::flush;
         // get user input
         std::getline(std::cin, input);
 
@@ -98,44 +101,75 @@ float calculate(std::string &expression) {
     // replace the operation with the result
 
     // call the function again with the new expression
+    bool startedSecond = false;
 
-    std::string left;
-    int leftIndex;
-    std::string right;
-    int rightIndex;
-    Operator op;
-    int opIndex;
-    bool opFound = false;
+    std::string priorityNumber1;
+    std::string priorityNumber2;
+    Operator priorityOp;
+    int priorityOperationStart = -1;
+    int priorityOperationEnd = -1;
 
-    bool firstOperationRecorded = false;
+    std::string currentNumber1;
+    std::string currentNumber2;
+    Operator currentOp;
+    bool currentOpFound = false;
+    int currentOperationStart = -1;
+    int currentOperationEnd = -1;
+
+    // current operation stats
+
 
     for (int i = 0; i < expression.length(); i++) {
         char c = expression[i];
+        bool opPrevious = isOperator(expression[i - 1]) && !opPrevious;
 
-        if (isOperator(c)) {
-            if (opFound) {
-                firstOperationRecorded = true;
-                
+        bool firstOperationComplete = !priorityNumber1.empty() && !priorityNumber2.empty();
+
+        if (!firstOperationComplete) {
+            if (isOperator(c) && !opPrevious) {
+                currentOp = getOperator(c);
+                currentOpFound = true;
+            } else if (!currentOpFound) {
+                currentNumber1 += c;
+
+                if (currentOperationStart == -1) {
+                    currentOperationStart = i;
+                }
+            } else {
+                currentNumber2 += c;
+                if (currentOperationEnd == -1) {
+                    currentOperationEnd = i;
+                } else {
+                    currentOperationEnd++;
+                }
             }
 
-            Operator currentOp = static_cast<Operator>(c);
-
-            op = currentOp;
-            opIndex = i;
-            opFound = true;
-
-
-        } else if (!opFound) {
-            left += c;
-        } else {
-            right += c;
+            bool nextIsNewOperation =
+                    (!currentOpFound && !isOperator(c) && isOperator(expression[i + 1])) ||
+                    expression[i + 1] == '\0'; // Null char
+            if (nextIsNewOperation) {
+                priorityNumber1 = currentNumber1;
+                priorityNumber2 = currentNumber2;
+                priorityOp = currentOp;
+                priorityOperationStart = currentOperationStart;
+                priorityOperationEnd = currentOperationEnd;
+            }
+        } else if (isOperator(c) && !opPrevious) {
         }
+//        else {
+//            throw std::runtime_error("Invalid input");
+//        }
+
 
     }
-    std::cout << "expression with priority: " << left << " " << static_cast<char>(op) << " " << right << std::endl;
 
+    std::cout << "expression with priority: " << priorityNumber1 << " "
+              << priorityNumber2 << std::endl;
 
-    return -1.0;
+    float number1 = std::stof(priorityNumber1);
+    float number2 = std::stof(priorityNumber2);
+
+    return solveOperation(number1, number2, priorityOp);
 }
 
 bool isOperator(char c) {
@@ -156,4 +190,44 @@ void preProcessInput(std::string &input) {
 
 void removeAllSpaces(std::string &input) {
     input.erase(std::remove_if(input.begin(), input.end(), ::isspace), input.end());
+}
+
+
+float solveOperation(float &number1, float &number2, Operator &op) {
+    switch (op) {
+        case Operator::ADD:
+            return number1 + number2;
+        case Operator::SUBTRACT:
+            return number1 - number2;
+        case Operator::MULTIPLY:
+            return number1 * number2;
+        case Operator::DIVIDE:
+            return number1 / number2;
+        case Operator::POWER:
+            return std::pow(number1, number2);
+        case Operator::MODULO:
+            return static_cast<int>(number1) % static_cast<int>(number2);
+        default:
+            throw std::runtime_error("Invalid operator");
+    }
+
+}
+
+Operator getOperator(char c) {
+    switch (c) {
+        case '+' :
+            return Operator::ADD;
+        case '-' :
+            return Operator::SUBTRACT;
+        case '*' :
+            return Operator::MULTIPLY;
+        case '/' :
+            return Operator::DIVIDE;
+        case '^' :
+            return Operator::POWER;
+        case '%' :
+            return Operator::MODULO;
+        default:
+            throw std::runtime_error("Invalid operator");
+    }
 }
