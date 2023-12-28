@@ -4,7 +4,7 @@
 
 constexpr char ADD = '+';
 constexpr char SUBTRACT = '-';
-constexpr char MULTIPLY = '*';
+constexpr char MULTIPLY = 'x';
 constexpr char DIVIDE = '/';
 constexpr char POWER = '^';
 constexpr char MODULO = '%';
@@ -53,7 +53,7 @@ int main() {
 
         float result;
         try {
-            result = parseStringToFloat(input);
+            result = calculate(input);
         } catch (std::invalid_argument &e) {
             std::cout << "Invalid input" << std::endl;
             continue;
@@ -76,22 +76,22 @@ int main() {
  * @return The result of the calculation.
  */
 float calculate(std::string expression) {
-    std::string priorityNum1;
-    std::string priorityNum2;
-    char priorityOp = '\0';
-    size_t priorityExpressionStart = -1;
-    size_t priorityExpressionEnd = -1;
-
-    std::string currentNum1;
-    std::string currentNum2;
-    char currentOp;
-    bool currentOpFound = false;
-    size_t currentExpressionStart = 0;
-    size_t currentExpressionEnd = 0;
-
-    bool opPrevious = false;
-
     while (!isFloat(expression)) {
+        std::string priorityNum1;
+        std::string priorityNum2;
+        char priorityOp = '\0';
+        size_t priorityExpressionStart = -1;
+        size_t priorityExpressionEnd = -1;
+
+        std::string currentNum1;
+        std::string currentNum2;
+        char currentOp;
+        bool currentOpFound = false;
+        size_t currentExpressionStart = 0;
+        size_t currentExpressionEnd = 0;
+
+        bool opPrevious = false;
+
         for (size_t i = 0; i < expression.length(); i++) {
             char c = expression[i];
             opPrevious = isOperator(expression[i - 1]) && !opPrevious;
