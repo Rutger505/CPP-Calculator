@@ -1,17 +1,13 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
-#include <map>
-#include <valarray>
 
-enum class Operator {
-    ADD,
-    SUBTRACT,
-    MULTIPLY,
-    DIVIDE,
-    POWER,
-    MODULO
-};
+constexpr char ADD = '+';
+constexpr char SUBTRACT = '-';
+constexpr char MULTIPLY = '*';
+constexpr char DIVIDE = '/';
+constexpr char POWER = '^';
+constexpr char MODULO = '%';
 
 void printSupportedOperators();
 
@@ -21,20 +17,20 @@ void preProcessInput(std::string &input);
 
 void removeAllSpaces(std::string &input);
 
-float calculate(std::string &expression);
+float calculate(const std::string &expression);
 
-float solveOperation(float &number1, float &number2, Operator &op);
+float solveOperation(float number1, float number2, char op);
 
 bool isOperator(char c);
 
-Operator getOperator(char c);
+int getPriority(char op);
 
 int main() {
     std::cout << "Welcome to my calculator" << std::endl;
     std::cout << "Enter your calculation (h for help, q to quit)" << std::endl;
     std::string input;
     while (true) {
-        std::cout << "> " << std::flush;
+        std::cout << ">" << std::flush;
         // get user input
         std::getline(std::cin, input);
 
@@ -53,30 +49,13 @@ int main() {
 
         std::cout << "Preprocessed input: " << input << std::endl;
 
-        std::cout << "Result: " << calculate(input) << std::endl;
+        float result = calculate(input);
+
+        std::cout << "Result: " << result << std::endl;
     }
 
     std::cout << "Bye see you next time." << std::endl;
     return 0;
-}
-
-
-int getPriority(Operator op) {
-    static std::map<Operator, int> priorityMap = {
-            {Operator::ADD,      1},
-            {Operator::SUBTRACT, 1},
-            {Operator::MULTIPLY, 2},
-            {Operator::DIVIDE,   2},
-            {Operator::POWER,    3},
-            {Operator::MODULO,   3}
-    };
-
-    auto it = priorityMap.find(op);
-    if (it != priorityMap.end()) {
-        return it->second;
-    } else {
-        throw std::runtime_error("Operator not found in priority map");
-    }
 }
 
 
@@ -85,103 +64,117 @@ int getPriority(Operator op) {
  * @param input The input to calculate: 1+4/6.
  * @return The result of the calculation.
  */
-float calculate(std::string &expression) {
+float calculate(const std::string &expression) {
+    std::string priorityNum1;
+    std::string priorityNum2;
+    char priorityOp = '\0';
+    size_t priorityExpressionStart = -1;
+    size_t priorityExpressionEnd = -1;
 
-    // save the first number
-    // save first number index
-    // save the operator
-    // save the operator index
-    // save the second number
-    // save the second number index
-
-    // if the operatior that is next is a hight priority operator save the new operator and the next number
-
-    // after the whole input is prosseces calculate the first oparation
-
-    // replace the operation with the result
-
-    // call the function again with the new expression
-    bool startedSecond = false;
-
-    std::string priorityNumber1;
-    std::string priorityNumber2;
-    Operator priorityOp;
-    int priorityOperationStart = -1;
-    int priorityOperationEnd = -1;
-
-    std::string currentNumber1;
-    std::string currentNumber2;
-    Operator currentOp;
+    std::string currentNum1;
+    std::string currentNum2;
+    char currentOp;
     bool currentOpFound = false;
-    int currentOperationStart = -1;
-    int currentOperationEnd = -1;
+    size_t currentExpressionStart = 0;
+    size_t currentExpressionEnd = 0;
 
-    // current operation stats
+    bool opPrevious = false;
 
-
-    for (int i = 0; i < expression.length(); i++) {
+    for (size_t i = 0; i < expression.length(); i++) {
         char c = expression[i];
-        bool opPrevious = isOperator(expression[i - 1]) && !opPrevious;
+        opPrevious = isOperator(expression[i - 1]) && !opPrevious;
+        bool charIsOp = isOperator(c) && !opPrevious;
+        bool endCurrentExpression = !charIsOp && (isOperator(expression[i + 1]) || i + 1 >= expression.length());
 
-        bool firstOperationComplete = !priorityNumber1.empty() && !priorityNumber2.empty();
-
-        if (!firstOperationComplete) {
-            if (isOperator(c) && !opPrevious) {
-                currentOp = getOperator(c);
-                currentOpFound = true;
-            } else if (!currentOpFound) {
-                currentNumber1 += c;
-
-                if (currentOperationStart == -1) {
-                    currentOperationStart = i;
-                }
-            } else {
-                currentNumber2 += c;
-                if (currentOperationEnd == -1) {
-                    currentOperationEnd = i;
-                } else {
-                    currentOperationEnd++;
-                }
-            }
-
-            bool nextIsNewOperation =
-                    (!currentOpFound && !isOperator(c) && isOperator(expression[i + 1])) ||
-                    expression[i + 1] == '\0'; // Null char
-            if (nextIsNewOperation) {
-                priorityNumber1 = currentNumber1;
-                priorityNumber2 = currentNumber2;
-                priorityOp = currentOp;
-                priorityOperationStart = currentOperationStart;
-                priorityOperationEnd = currentOperationEnd;
-            }
-        } else if (isOperator(c) && !opPrevious) {
+        // Parse the char
+        if (charIsOp) {
+            currentOp = c;
+            currentOpFound = true;
+        } else if (!currentOpFound) {
+            currentNum1 += c;
+        } else {
+            currentNum2 += c;
         }
-//        else {
-//            throw std::runtime_error("Invalid input");
-//        }
+        currentExpressionEnd++;
 
+        // Check to update priority values
+        if (endCurrentExpression && currentOpFound) {
+            if (getPriority(currentOp) > getPriority(priorityOp)) {
+                priorityNum1 = currentNum1;
+                priorityNum2 = currentNum2;
+                priorityOp = currentOp;
+                priorityExpressionStart = currentExpressionStart;
+                priorityExpressionEnd = currentExpressionEnd;
+            }
 
+            currentNum1 = currentNum2;
+            currentNum2 = "";
+            currentOpFound = false;
+            currentExpressionStart = i - currentNum1.length();
+            currentExpressionEnd = i;
+        }
     }
 
-    std::cout << "expression with priority: " << priorityNumber1 << " "
-              << priorityNumber2 << std::endl;
+    std::cout << "Priority Number 1: " << priorityNum1 << std::endl;
+    std::cout << "Priority Number 2: " << priorityNum2 << std::endl;
+    std::cout << "Priority Operator: " << priorityOp << std::endl;
+    std::cout << "Priority Expression Start: " << priorityExpressionStart << std::endl;
+    std::cout << "Priority Expression End: " << priorityExpressionEnd << std::endl;
 
-    float number1 = std::stof(priorityNumber1);
-    float number2 = std::stof(priorityNumber2);
+    return solveOperation(std::stof(priorityNum1), std::stof(priorityNum2), priorityOp);
+}
 
-    return solveOperation(number1, number2, priorityOp);
+float solveOperation(float number1, float number2, char op) {
+    switch (op) {
+        case ADD:
+            return number1 + number2;
+        case SUBTRACT:
+            return number1 - number2;
+        case MULTIPLY:
+            return number1 * number2;
+        case DIVIDE:
+            return number1 / number2;
+        case POWER:
+            return std::pow(number1, number2);
+        case MODULO:
+            return std::fmod(number1, number2);
+        default:
+            throw std::invalid_argument("Invalid operator");
+    }
+}
+
+int getPriority(char op) {
+    switch (op) {
+        case ADD:
+        case SUBTRACT:
+            return 1;
+        case MULTIPLY:
+        case DIVIDE:
+            return 2;
+        case POWER:
+        case MODULO:
+            return 3;
+        default:
+            return 0;
+    }
 }
 
 bool isOperator(char c) {
-    return c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%';
-}
-
-void printSupportedOperators() {
-    std::cout << "Supported operations are: +, -, *, /, ^, %" << std::endl;
+    return c == ADD || c == SUBTRACT || c == MULTIPLY || c == DIVIDE || c == POWER || c == MODULO;
 }
 
 void printHelp() {
     printSupportedOperators();
+}
+
+void printSupportedOperators() {
+    std::cout << "Supported operations are: ";
+    std::cout << ADD << ", ";
+    std::cout << SUBTRACT << ", ";
+    std::cout << MULTIPLY << ", ";
+    std::cout << DIVIDE << ", ";
+    std::cout << POWER << ", ";
+    std::cout << MODULO << std::endl;
 }
 
 void preProcessInput(std::string &input) {
@@ -193,41 +186,4 @@ void removeAllSpaces(std::string &input) {
 }
 
 
-float solveOperation(float &number1, float &number2, Operator &op) {
-    switch (op) {
-        case Operator::ADD:
-            return number1 + number2;
-        case Operator::SUBTRACT:
-            return number1 - number2;
-        case Operator::MULTIPLY:
-            return number1 * number2;
-        case Operator::DIVIDE:
-            return number1 / number2;
-        case Operator::POWER:
-            return std::pow(number1, number2);
-        case Operator::MODULO:
-            return static_cast<int>(number1) % static_cast<int>(number2);
-        default:
-            throw std::runtime_error("Invalid operator");
-    }
 
-}
-
-Operator getOperator(char c) {
-    switch (c) {
-        case '+' :
-            return Operator::ADD;
-        case '-' :
-            return Operator::SUBTRACT;
-        case '*' :
-            return Operator::MULTIPLY;
-        case '/' :
-            return Operator::DIVIDE;
-        case '^' :
-            return Operator::POWER;
-        case '%' :
-            return Operator::MODULO;
-        default:
-            throw std::runtime_error("Invalid operator");
-    }
-}
