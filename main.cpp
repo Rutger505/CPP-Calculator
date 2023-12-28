@@ -17,7 +17,7 @@ void preProcessInput(std::string &input);
 
 void removeAllSpaces(std::string &input);
 
-float calculate(const std::string &expression);
+float calculate(std::string expression);
 
 float solveOperation(float number1, float number2, char op);
 
@@ -26,6 +26,8 @@ bool isOperator(char c);
 int getPriority(char op);
 
 float parseStringToFloat(const std::string &str);
+
+bool isFloat(const std::string &str);
 
 int main() {
     std::cout << "Welcome to my calculator" << std::endl;
@@ -69,11 +71,11 @@ int main() {
 
 
 /**
- * Calculates the result of the given input. Recursive function that claculates 1 operation at a time.
+ * Calculates the result of the given input.
  * @param input The input to calculate: 1+4/6.
  * @return The result of the calculation.
  */
-float calculate(const std::string &expression) {
+float calculate(std::string expression) {
     std::string priorityNum1;
     std::string priorityNum2;
     char priorityOp = '\0';
@@ -89,66 +91,53 @@ float calculate(const std::string &expression) {
 
     bool opPrevious = false;
 
-    for (size_t i = 0; i < expression.length(); i++) {
-        char c = expression[i];
-        opPrevious = isOperator(expression[i - 1]) && !opPrevious;
-        bool charIsOp = isOperator(c) && !opPrevious;
-        bool endCurrentExpression = !charIsOp && (isOperator(expression[i + 1]) || i + 1 >= expression.length());
+    while (!isFloat(expression)) {
+        for (size_t i = 0; i < expression.length(); i++) {
+            char c = expression[i];
+            opPrevious = isOperator(expression[i - 1]) && !opPrevious;
+            bool charIsOp = isOperator(c) && !opPrevious;
+            bool endCurrentExpression = !charIsOp && (isOperator(expression[i + 1]) || i + 1 >= expression.length());
 
-        // Parse the char
-        if (charIsOp) {
-            currentOp = c;
-            currentOpFound = true;
-        } else if (!currentOpFound) {
-            currentNum1 += c;
-        } else {
-            currentNum2 += c;
-        }
-        currentExpressionEnd++;
-
-        // Check to update priority values
-        if (endCurrentExpression && currentOpFound) {
-            if (getPriority(currentOp) > getPriority(priorityOp)) {
-                priorityNum1 = currentNum1;
-                priorityNum2 = currentNum2;
-                priorityOp = currentOp;
-                priorityExpressionStart = currentExpressionStart;
-                priorityExpressionEnd = currentExpressionEnd;
+            // Parse the char
+            if (charIsOp) {
+                currentOp = c;
+                currentOpFound = true;
+            } else if (!currentOpFound) {
+                currentNum1 += c;
+            } else {
+                currentNum2 += c;
             }
+            currentExpressionEnd++;
 
-            currentNum1 = currentNum2;
-            currentNum2 = "";
-            currentOpFound = false;
-            currentExpressionStart = i - currentNum1.length() + 1;
-            currentExpressionEnd = i + 1;
+            // Check to update priority values
+            if (endCurrentExpression && currentOpFound) {
+                if (getPriority(currentOp) > getPriority(priorityOp)) {
+                    priorityNum1 = currentNum1;
+                    priorityNum2 = currentNum2;
+                    priorityOp = currentOp;
+                    priorityExpressionStart = currentExpressionStart;
+                    priorityExpressionEnd = currentExpressionEnd;
+                }
+
+                currentNum1 = currentNum2;
+                currentNum2 = "";
+                currentOpFound = false;
+                currentExpressionStart = i - currentNum1.length() + 1;
+                currentExpressionEnd = i + 1;
+            }
         }
+
+        float parcedPriorityNumber1 = parseStringToFloat(priorityNum1);
+        float parcedPriorityNumber2 = parseStringToFloat(priorityNum2);
+        float priorityExpressionResult = solveOperation(parcedPriorityNumber1, parcedPriorityNumber2, priorityOp);
+
+        expression =
+                expression.substr(0, priorityExpressionStart) +
+                std::to_string(priorityExpressionResult) +
+                expression.substr(priorityExpressionEnd);
     }
 
-    float parcedPriorityNumber1 = parseStringToFloat(priorityNum1);
-    float parcedPriorityNumber2 = parseStringToFloat(priorityNum2);
-    float priorityExpressionResult = solveOperation(parcedPriorityNumber1, parcedPriorityNumber2, priorityOp);
-
-    std::string newExpression =
-            expression.substr(0, priorityExpressionStart) +
-            std::to_string(priorityExpressionResult) +
-            expression.substr(priorityExpressionEnd);
-
-    bool expressionSolved;
-    float result;
-    try {
-        result = parseStringToFloat(newExpression);
-        expressionSolved = true;
-    } catch (std::invalid_argument &e) {
-        expressionSolved = false;
-    } catch (std::out_of_range &e) {
-        expressionSolved = false;
-    }
-
-    if (expressionSolved) {
-        return result;
-    } else {
-        return calculate(newExpression);
-    }
+    return parseStringToFloat(expression);
 }
 
 float solveOperation(float number1, float number2, char op) {
@@ -201,6 +190,17 @@ float parseStringToFloat(const std::string &str) {
         throw std::invalid_argument("Invalid float value: " + std::string(e.what()));
     } catch (const std::out_of_range &e) {
         throw std::out_of_range("Float value out of range: " + std::string(e.what()));
+    }
+}
+
+bool isFloat(const std::string &str) {
+    try {
+        parseStringToFloat(str);
+        return true;
+    } catch (const std::invalid_argument &e) {
+        return false;
+    } catch (const std::out_of_range &e) {
+        return false;
     }
 }
 
