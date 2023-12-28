@@ -94,7 +94,7 @@ float calculate(std::string expression) {
 
         for (size_t i = 0; i < expression.length(); i++) {
             char c = expression[i];
-            opPrevious = isOperator(expression[i - 1]) && !opPrevious;
+            opPrevious = (isOperator(expression[i - 1]) && !opPrevious) || i == 0;
             bool charIsOp = isOperator(c) && !opPrevious;
             bool endCurrentExpression = !charIsOp && (isOperator(expression[i + 1]) || i + 1 >= expression.length());
 
