@@ -25,6 +25,8 @@ bool isOperator(char c);
 
 int getPriority(char op);
 
+float parseStringToFloat(const std::string &str);
+
 int main() {
     std::cout << "Welcome to my calculator" << std::endl;
     std::cout << "Enter your calculation (h for help, q to quit)" << std::endl;
@@ -47,9 +49,16 @@ int main() {
 
         preProcessInput(input);
 
-        std::cout << "Preprocessed input: " << input << std::endl;
-
-        float result = calculate(input);
+        float result;
+        try {
+            result = parseStringToFloat(input);
+        } catch (std::invalid_argument &e) {
+            std::cout << "Invalid input" << std::endl;
+            continue;
+        } catch (std::out_of_range &e) {
+            std::cout << "Invalid input" << std::endl;
+            continue;
+        }
 
         std::cout << "Result: " << result << std::endl;
     }
@@ -110,18 +119,36 @@ float calculate(const std::string &expression) {
             currentNum1 = currentNum2;
             currentNum2 = "";
             currentOpFound = false;
-            currentExpressionStart = i - currentNum1.length();
-            currentExpressionEnd = i;
+            currentExpressionStart = i - currentNum1.length() + 1;
+            currentExpressionEnd = i + 1;
         }
     }
 
-    std::cout << "Priority Number 1: " << priorityNum1 << std::endl;
-    std::cout << "Priority Number 2: " << priorityNum2 << std::endl;
-    std::cout << "Priority Operator: " << priorityOp << std::endl;
-    std::cout << "Priority Expression Start: " << priorityExpressionStart << std::endl;
-    std::cout << "Priority Expression End: " << priorityExpressionEnd << std::endl;
+    float parcedPriorityNumber1 = parseStringToFloat(priorityNum1);
+    float parcedPriorityNumber2 = parseStringToFloat(priorityNum2);
+    float priorityExpressionResult = solveOperation(parcedPriorityNumber1, parcedPriorityNumber2, priorityOp);
 
-    return solveOperation(std::stof(priorityNum1), std::stof(priorityNum2), priorityOp);
+    std::string newExpression =
+            expression.substr(0, priorityExpressionStart) +
+            std::to_string(priorityExpressionResult) +
+            expression.substr(priorityExpressionEnd);
+
+    bool expressionSolved;
+    float result;
+    try {
+        result = parseStringToFloat(newExpression);
+        expressionSolved = true;
+    } catch (std::invalid_argument &e) {
+        expressionSolved = false;
+    } catch (std::out_of_range &e) {
+        expressionSolved = false;
+    }
+
+    if (expressionSolved) {
+        return result;
+    } else {
+        return calculate(newExpression);
+    }
 }
 
 float solveOperation(float number1, float number2, char op) {
@@ -150,12 +177,30 @@ int getPriority(char op) {
             return 1;
         case MULTIPLY:
         case DIVIDE:
+        case MODULO:
             return 2;
         case POWER:
-        case MODULO:
             return 3;
         default:
             return 0;
+    }
+}
+
+float parseStringToFloat(const std::string &str) {
+    try {
+        size_t pos;
+        float result = std::stof(str, &pos);
+
+        // Check if the entire string was successfully converted
+        if (pos != str.length()) {
+            throw std::invalid_argument("Invalid characters in the string");
+        }
+
+        return result;
+    } catch (const std::invalid_argument &e) {
+        throw std::invalid_argument("Invalid float value: " + std::string(e.what()));
+    } catch (const std::out_of_range &e) {
+        throw std::out_of_range("Float value out of range: " + std::string(e.what()));
     }
 }
 
